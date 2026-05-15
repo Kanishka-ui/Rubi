@@ -1,0 +1,19 @@
+# Python Virtual Environment
+venv/
+__pycache__/
+*.pyc
+
+# Node Modules
+node_modules/
+dist/
+.vite/
+
+# Environment Variables (CRITICAL: Do not commit secrets)
+.env
+
+# MacOS/Windows garbage
+.DS_Store
+Thumbs.db
+
+# Test Files
+test_data.csv

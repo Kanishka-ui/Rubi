@@ -1,0 +1,32 @@
+{
+  "name": "sqhelp",
+  "version": "1.0.0",
+  "description": "Convert natural language queries to SQL and execute them safely against your MySQL database.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite --port 3000",
+    "start": "vite --port 3000",
+    "build": "vite build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/parthdhamdhere/SQheLp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/parthdhamdhere/SQheLp/issues"
+  },
+  "homepage": "https://github.com/parthdhamdhere/SQheLp#readme",
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
+    "axios": "^1.16.1",
+    "lucide-react": "^1.16.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "recharts": "^3.8.1",
+    "vite": "^8.0.10"
+  }
+}
