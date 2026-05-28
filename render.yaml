@@ -16,7 +16,7 @@ services:
       - key: MYSQL_PASSWORD
         sync: false
       - key: MYSQL_DATABASE
-        value: sqhelp_db
+        value: defaultdb
       - key: GEMINI_API_KEY
         sync: false
       - key: SECRET_KEY

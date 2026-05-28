@@ -4,14 +4,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database Configuration
+_host = os.getenv('MYSQL_HOST', 'localhost')
+# Enable SSL automatically when connecting to a remote host (e.g. Aiven)
+# Set MYSQL_USE_SSL=false explicitly to disable
+_use_ssl_default = 'false' if _host in ('localhost', '127.0.0.1') else 'true'
+MYSQL_USE_SSL = os.getenv('MYSQL_USE_SSL', _use_ssl_default).lower() == 'true'
+
 MYSQL_CONFIG = {
-    'host': os.getenv('MYSQL_HOST', 'localhost'),
+    'host': _host,
     'port': int(os.getenv('MYSQL_PORT', 3306)),
     'user': os.getenv('MYSQL_USER', 'root'),
     'password': os.getenv('MYSQL_PASSWORD', ''),
-    'database': os.getenv('MYSQL_DATABASE', 'sqhelp_db')
+    'database': os.getenv('MYSQL_DATABASE', 'defaultdb'),
 }
-print("Loaded MYSQL_CONFIG:", MYSQL_CONFIG)
+
+if MYSQL_USE_SSL:
+    MYSQL_CONFIG['ssl_disabled'] = False
+
+print("Loaded MYSQL_CONFIG (host):", MYSQL_CONFIG['host'], "| SSL:", MYSQL_USE_SSL)
 
 # LLM Configuration
 LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'gemini')  # Options: gemini, groq, claude

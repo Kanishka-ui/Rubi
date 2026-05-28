@@ -1,7 +1,7 @@
 import mysql.connector
 from mysql.connector import Error, pooling
 from typing import List, Dict, Optional
-from config import MYSQL_CONFIG
+from config import MYSQL_CONFIG, MYSQL_USE_SSL
 import pandas as pd
 from sqlalchemy import create_engine
 import urllib.parse
@@ -264,7 +264,11 @@ class DatabaseManager:
         database = cfg.get('database', cfg.get('database_name', ''))
         
         conn_str = f"mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}"
-        engine = create_engine(conn_str)
+        
+        # Add SSL for remote hosts (e.g. Aiven)
+        use_ssl = cfg.get('ssl_disabled') == False or (cfg is MYSQL_CONFIG and MYSQL_USE_SSL)
+        connect_args = {'ssl_disabled': False} if use_ssl else {}
+        engine = create_engine(conn_str, connect_args=connect_args)
         
         df = pd.read_csv(file_stream)
         # Sanitize column names
