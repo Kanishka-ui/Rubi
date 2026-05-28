@@ -48,6 +48,7 @@ class DatabaseManager:
             if ok:
                 print(f"[OK] Successfully connected to MySQL database: {MYSQL_CONFIG['database']}")
                 self.init_users_table()
+                self.init_dummy_orders()
             return ok
         except Error as e:
             print(f"[ERROR] Error connecting to MySQL: {e}")
@@ -89,6 +90,60 @@ class DatabaseManager:
             print("[OK] Verified sqhelp_users and sqhelp_connections tables exist.")
         except Error as e:
             print(f"[ERROR] Error creating users table: {e}")
+        finally:
+            if conn:
+                conn.close()
+    def init_dummy_orders(self):
+        """Create dummy orders table and seed it with mock data if empty"""
+        conn = None
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            
+            # Create orders table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS orders (
+                    order_id INT AUTO_INCREMENT PRIMARY KEY,
+                    customer_name VARCHAR(255) NOT NULL,
+                    order_date DATE NOT NULL,
+                    product_name VARCHAR(255) NOT NULL,
+                    category VARCHAR(100) NOT NULL,
+                    quantity INT NOT NULL,
+                    price DECIMAL(10, 2) NOT NULL,
+                    total_amount DECIMAL(10, 2) NOT NULL,
+                    status VARCHAR(50) NOT NULL
+                )
+            ''')
+            
+            # Check if table is empty
+            cursor.execute("SELECT COUNT(*) FROM orders")
+            count = cursor.fetchone()[0]
+            
+            if count == 0:
+                print("[INFO] Seeding dummy orders data...")
+                dummy_data = [
+                    ("Alice Smith", "2026-05-01", "Laptop Pro 15", "Electronics", 1, 1200.00, 1200.00, "Completed"),
+                    ("Bob Johnson", "2026-05-02", "Wireless Mouse", "Electronics", 2, 25.00, 50.00, "Completed"),
+                    ("Charlie Brown", "2026-05-03", "Ergonomic Office Chair", "Furniture", 1, 299.99, 299.99, "Pending"),
+                    ("David Wilson", "2026-05-04", "Mechanical Keyboard", "Electronics", 1, 89.99, 89.99, "Completed"),
+                    ("Emma Davis", "2026-05-05", "Desk Lamp LED", "Furniture", 3, 19.99, 59.97, "Shipped"),
+                    ("Frank Miller", "2026-05-06", "Water Bottle 1L", "Fitness", 5, 15.00, 75.00, "Completed"),
+                    ("Grace Lee", "2026-05-07", "Yoga Mat", "Fitness", 2, 30.00, 60.00, "Pending"),
+                    ("Henry Jones", "2026-05-08", "Noise Cancelling Headphones", "Electronics", 1, 199.99, 199.99, "Completed"),
+                    ("Ivy Martin", "2026-05-09", "Premium Notebook", "Stationery", 10, 4.50, 45.00, "Completed"),
+                    ("Jack White", "2026-05-10", "Gel Pens Pack", "Stationery", 4, 8.00, 32.00, "Shipped")
+                ]
+                
+                cursor.executemany('''
+                    INSERT INTO orders (customer_name, order_date, product_name, category, quantity, price, total_amount, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ''', dummy_data)
+                conn.commit()
+                print(f"[OK] Seeded {len(dummy_data)} orders.")
+                
+            cursor.close()
+        except Error as e:
+            print(f"[ERROR] Error seeding orders: {e}")
         finally:
             if conn:
                 conn.close()
@@ -202,6 +257,12 @@ class DatabaseManager:
             cursor.execute("SHOW TABLES")
             tables = [table[0] for table in cursor.fetchall()]
             cursor.close()
+            
+            # Hide platform system tables if using default database
+            if custom_config is None:
+                system_tables = {'sqhelp_users', 'sqhelp_connections'}
+                tables = [t for t in tables if t.lower() not in system_tables]
+                
             return tables
         except Error as e:
             print(f"[ERROR] Error fetching tables: {e}")
@@ -283,6 +344,15 @@ class DatabaseManager:
     # ------------------------------------------------------------------
     def execute_query(self, query: str, custom_config: Optional[Dict] = None) -> Dict:
         """Execute SQL query and return results"""
+        # Block queries targeting platform system tables
+        query_upper = query.upper()
+        if 'SQHELP_USERS' in query_upper or 'SQHELP_CONNECTIONS' in query_upper:
+            return {
+                'success': False,
+                'error': 'Access denied: You are not authorized to access platform system tables.',
+                'message': 'Error executing query: Access denied for system tables.'
+            }
+            
         conn = None
         try:
             conn = self._get_connection(custom_config)
