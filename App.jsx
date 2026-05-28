@@ -24,6 +24,7 @@ import {
   GitBranch,
   LogOut,
   Server,
+  Network,
 } from 'lucide-react';
 import AuthPage from './AuthPage.jsx';
 import AutoChart from './AutoChart.jsx';
@@ -31,6 +32,7 @@ import Dashboard from './Dashboard.jsx';
 import QueryLibrary from './QueryLibrary.jsx';
 import AnalysisThread from './AnalysisThread.jsx';
 import DataSources from './DataSources.jsx';
+import VisualSchemaMap from './VisualSchemaMap.jsx';
 import { recommendChart } from './chartUtils.js';
 import './App.css';
 
@@ -80,6 +82,7 @@ function App() {
   const [chatHistory, setChatHistory]         = useState([]);
   const [pendingQuery, setPendingQuery]       = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [showMap, setShowMap]                 = useState(false);
 
   // ── Query History ─────────────────────────────────────
   const [history, setHistory]                 = useState(loadHistory);
@@ -609,9 +612,22 @@ function App() {
 
         {/* Sidebar – Schema Viewer */}
         <aside className="sidebar">
-          <div className="sidebar-header">
-            <TableIcon size={18} />
-            <h2>Database Schema</h2>
+          <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <TableIcon size={18} />
+              <h2>Database Schema</h2>
+            </div>
+            {schema && schema.tables?.length > 0 && (
+              <button 
+                className="dash-btn dash-btn-ghost" 
+                onClick={() => setShowMap(true)} 
+                title="View Visual ER Map"
+                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', border: '1px solid #cbd5e1', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.25rem', height: '28px', background: '#f8fafc', color: '#475569' }}
+              >
+                <Network size={12} />
+                Map
+              </button>
+            )}
           </div>
           {schema ? (
             <div className="schema-list">
@@ -742,6 +758,14 @@ function App() {
           </form>
         </main>
       </div>
+
+      {/* Visual Schema Map Modal */}
+      {showMap && schema && (
+        <VisualSchemaMap 
+          schema={schema} 
+          onClose={() => setShowMap(false)} 
+        />
+      )}
     </div>
   );
 }
