@@ -12,14 +12,15 @@ import { recommendChart, prepareChartData, CHART_COLORS } from './chartUtils.js'
  * AutoChart — automatically renders the best chart for query results.
  *
  * Props:
- *   columns  : string[]
- *   data     : Object[]
- *   height   : number (default 300)
+ *   columns      : string[]
+ *   data         : Object[]
+ *   height       : number (default 300)
+ *   customConfig : Object (optional custom chart configuration override)
  */
-export default function AutoChart({ columns, data, height = 300 }) {
+export default function AutoChart({ columns, data, height = 300, customConfig = null }) {
   const recommendation = useMemo(
-    () => recommendChart(columns, data),
-    [columns, data]
+    () => customConfig || recommendChart(columns, data),
+    [columns, data, customConfig]
   );
 
   if (!recommendation) return null;

@@ -362,12 +362,11 @@ function App() {
               </div>
             )}
 
-            {/* ── Auto-Visualization Chart ── */}
-            {hasData && rec && (
-              <AutoChart
+            {/* ── Interactive Auto-Visualization Chart ── */}
+            {hasData && (
+              <InteractiveChart
                 columns={message.result.columns}
                 data={message.result.data}
-                height={280}
               />
             )}
 
@@ -789,6 +788,129 @@ function SchemaTable({ table, schema }) {
               <span className="column-type">{col.Type}</span>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Interactive Chart Component ──────────────────────── */
+function InteractiveChart({ columns, data }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Filter numeric columns
+  const numericCols = useMemo(() => {
+    if (!columns || !data || data.length === 0) return [];
+    return columns.filter(col => {
+      return data.some(row => {
+        const v = row[col];
+        if (v === null || v === undefined || v === '') return false;
+        const n = Number(v);
+        return !isNaN(n) && isFinite(n);
+      });
+    });
+  }, [columns, data]);
+
+  // Set default state variables
+  const [chartType, setChartType] = useState('bar');
+  const [labelKey, setLabelKey] = useState(columns[0] || '');
+  const [valueKey, setValueKey] = useState(numericCols[0] || columns[1] || columns[0] || '');
+
+  // Reset keys if columns change
+  useEffect(() => {
+    if (columns && columns.length > 0) {
+      setLabelKey(columns[0]);
+      setValueKey(numericCols[0] || columns[1] || columns[0]);
+    }
+  }, [columns, numericCols]);
+
+  if (!columns || !data || data.length === 0) return null;
+
+  if (numericCols.length === 0) {
+    return (
+      <div style={{ padding: '0.5rem 0', fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
+        No numeric columns available in these results to visualize.
+      </div>
+    );
+  }
+
+  const customConfig = {
+    chartType,
+    labelKey,
+    valueKeys: [valueKey],
+    title: `${valueKey} by ${labelKey}`
+  };
+
+  return (
+    <div className="interactive-chart" style={{ marginTop: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.6rem 1rem',
+          background: '#f1f5f9',
+          border: 'none',
+          fontWeight: '500',
+          color: '#334155',
+          cursor: 'pointer',
+          textAlign: 'left',
+          fontSize: '0.85rem'
+        }}
+      >
+        <Network size={14} color="#6366f1" />
+        {isOpen ? 'Hide Visualization Map' : 'Show Visualization Map'}
+      </button>
+
+      {isOpen && (
+        <div style={{ padding: '1rem', background: '#ffffff', borderTop: '1px solid #e2e8f0' }}>
+          {/* Custom Settings Selection Row */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>Chart Type</label>
+              <select 
+                value={chartType} 
+                onChange={e => setChartType(e.target.value)} 
+                style={{ padding: '0.35rem 0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', background: '#f8fafc', color: '#334155' }}
+              >
+                <option value="bar">Bar Chart</option>
+                <option value="line">Line Chart</option>
+                <option value="pie">Pie Chart</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>X-Axis (Label)</label>
+              <select 
+                value={labelKey} 
+                onChange={e => setLabelKey(e.target.value)} 
+                style={{ padding: '0.35rem 0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', background: '#f8fafc', color: '#334155' }}
+              >
+                {columns.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>Y-Axis (Value)</label>
+              <select 
+                value={valueKey} 
+                onChange={e => setValueKey(e.target.value)} 
+                style={{ padding: '0.35rem 0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem', background: '#f8fafc', color: '#334155' }}
+              >
+                {numericCols.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Chart Workspace */}
+          <AutoChart 
+            columns={columns}
+            data={data}
+            height={260}
+            customConfig={customConfig}
+          />
         </div>
       )}
     </div>
