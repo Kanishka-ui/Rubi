@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
-from passlib.context import CryptContext
+import bcrypt
 import os
 from jose import JWTError, jwt
 import mysql.connector
@@ -16,7 +16,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "your-very-secret-key-please-change-in-prod
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Direct bcrypt package is used for password hashing to avoid passlib wrap bugs on Python 3.14
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
 
 # ------------------------------------------------------------------
@@ -43,10 +43,16 @@ class TokenData(BaseModel):
 # Helper Functions
 # ------------------------------------------------------------------
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception as e:
+        print(f"[ERROR] password verification failed: {e}")
+        return False
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
