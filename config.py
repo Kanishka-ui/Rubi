@@ -4,7 +4,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database Configuration
-_host = os.getenv('MYSQL_HOST', 'localhost')
+_host = os.getenv('MYSQL_HOST') or os.getenv('DB_HOST') or 'localhost'
+_port_str = os.getenv('MYSQL_PORT') or os.getenv('DB_PORT') or '3306'
+_user = os.getenv('MYSQL_USER') or os.getenv('DB_USER') or 'root'
+_password = os.getenv('MYSQL_PASSWORD') or os.getenv('DB_PASSWORD') or ''
+_database = os.getenv('MYSQL_DATABASE') or os.getenv('DB_NAME') or 'defaultdb'
+
 # Enable SSL automatically when connecting to a remote host (e.g. Aiven)
 # Set MYSQL_USE_SSL=false explicitly to disable
 _use_ssl_default = 'false' if _host in ('localhost', '127.0.0.1') else 'true'
@@ -12,10 +17,10 @@ MYSQL_USE_SSL = os.getenv('MYSQL_USE_SSL', _use_ssl_default).lower() == 'true'
 
 MYSQL_CONFIG = {
     'host': _host,
-    'port': int(os.getenv('MYSQL_PORT', 3306)),
-    'user': os.getenv('MYSQL_USER', 'root'),
-    'password': os.getenv('MYSQL_PASSWORD', ''),
-    'database': os.getenv('MYSQL_DATABASE', 'defaultdb'),
+    'port': int(_port_str),
+    'user': _user,
+    'password': _password,
+    'database': _database,
 }
 
 if MYSQL_USE_SSL:
