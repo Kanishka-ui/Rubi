@@ -69,7 +69,7 @@ def get_user_by_email(email: str):
         return user
     except Exception as e:
         print(f"[ERROR] fetch user: {e}")
-        return None
+        raise e
     finally:
         if conn:
             conn.close()
@@ -89,7 +89,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
         
-    user = get_user_by_email(email=token_data.email)
+    try:
+        user = get_user_by_email(email=token_data.email)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection error during authentication: {str(e)}"
+        )
     if user is None:
         raise credentials_exception
     return user
@@ -101,7 +107,13 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/signup", response_model=UserResponse)
 def signup(user: UserCreate):
-    existing_user = get_user_by_email(user.email)
+    try:
+        existing_user = get_user_by_email(user.email)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection error during signup check: {str(e)}"
+        )
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -133,7 +145,13 @@ def signup(user: UserCreate):
 
 @router.post("/token", response_model=Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = get_user_by_email(form_data.username) # OAuth2 uses 'username' field for email in this context
+    try:
+        user = get_user_by_email(form_data.username) # OAuth2 uses 'username' field for email in this context
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection error during login: {str(e)}"
+        )
     if not user or not verify_password(form_data.password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

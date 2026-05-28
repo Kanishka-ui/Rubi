@@ -57,7 +57,9 @@ export default function AuthPage({ onLogin }) {
         const params = new URLSearchParams();
         params.append('username', formData.email);
         params.append('password', formData.password);
-        const res = await axios.post(`${API_BASE_URL}/auth/token`, params);
+        const res = await axios.post(`${API_BASE_URL}/auth/token`, params, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
         
         const token = res.data.access_token;
         localStorage.setItem('sqhelp_token', token);
@@ -67,7 +69,21 @@ export default function AuthPage({ onLogin }) {
         onLogin(userRes.data);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'An error occurred. Please try again.');
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        setError(detail.map(d => d.msg).join(', '));
+      } else if (typeof detail === 'string') {
+        setError(detail);
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.message) {
+        setError(err.message === 'Network Error' 
+          ? 'Network Error: Cannot connect to the server. Please check if the server is running or wait for it to wake up.' 
+          : err.message
+        );
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
