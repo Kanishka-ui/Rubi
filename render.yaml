@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: sqhelp-backend
+    runtime: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_DATABASE
+        value: sqhelp_db
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: BACKEND_PORT
+        value: "10000"
