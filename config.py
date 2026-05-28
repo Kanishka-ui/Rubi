@@ -25,7 +25,6 @@ MYSQL_CONFIG = {
 
 if MYSQL_USE_SSL:
     MYSQL_CONFIG['ssl_disabled'] = False
-    MYSQL_CONFIG['ssl_mode'] = 'REQUIRED'
 
 print("Loaded MYSQL_CONFIG (host):", MYSQL_CONFIG['host'], "| SSL:", MYSQL_USE_SSL)
 

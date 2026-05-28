@@ -267,7 +267,7 @@ class DatabaseManager:
         
         # Add SSL for remote hosts (e.g. Aiven)
         use_ssl = cfg.get('ssl_disabled') == False or (cfg is MYSQL_CONFIG and MYSQL_USE_SSL)
-        connect_args = {'ssl_disabled': False, 'ssl_mode': 'REQUIRED'} if use_ssl else {}
+        connect_args = {'ssl_disabled': False} if use_ssl else {}
         engine = create_engine(conn_str, connect_args=connect_args)
         
         df = pd.read_csv(file_stream)
