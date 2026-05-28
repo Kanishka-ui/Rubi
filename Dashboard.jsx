@@ -7,7 +7,7 @@ import {
 import AutoChart from './AutoChart.jsx';
 import { recommendChart } from './chartUtils.js';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 const PINS_KEY = 'sqhelp_pinned_charts';
 
 /* ── localStorage helpers ───────────────────────────────── */
